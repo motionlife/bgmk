@@ -19,13 +19,13 @@ struct CalendarInterface
 {
     // pure virtual (or abstract function )
     // that requires to be overwritten in an derived class
-    virtual WeekDays what_day_is_today() = 0;
+    virtual WeekDays what_day_is_today() const = 0;
     virtual ~CalendarInterface() = default;
 };
 
 struct CalendarImplementation : public CalendarInterface
 {
-    WeekDays what_day_is_today() override;
+    WeekDays what_day_is_today() const override;
 };
 
 struct Me
@@ -43,21 +43,25 @@ struct Me
 class MockCalendar : public CalendarInterface
 {
 public:
-    MOCK_METHOD(WeekDays, what_day_is_today, (), (override));
+    MOCK_METHOD(WeekDays, what_day_is_today, (), (const, override));
 };
 
-TEST(MeTest, CanNotDrinkBeerOnWednesday)
+TEST(MeTest, CanNotDrinkBeerOnWeekDays)
 {
     auto calendar_mock = std::make_unique<::testing::StrictMock<MockCalendar>>();
-    EXPECT_CALL(*calendar_mock, what_day_is_today())
-        .WillOnce(::testing::Return(WeekDays::THURSDAY));
+    EXPECT_CALL(*calendar_mock, what_day_is_today)
+        .Times(::testing::AtLeast(2))
+        .WillOnce(::testing::Return(WeekDays::THURSDAY))
+        .WillOnce(::testing::Return(WeekDays::SATURDAY))
+        .WillRepeatedly(::testing::Return(WeekDays::SUNDAY));
     Me unit_under_test{std::move(calendar_mock)};
 
     EXPECT_FALSE(unit_under_test.can_drink_beer_today());
+    EXPECT_TRUE(unit_under_test.can_drink_beer_today());
 }
 
 // some legacy impl code used in prod env.
-WeekDays CalendarImplementation::what_day_is_today()
+WeekDays CalendarImplementation::what_day_is_today() const
 {
     std::tm time_in{};
     std::time_t time_temp = std::mktime(&time_in);

@@ -42,7 +42,7 @@ struct AdvancedTroubleshootingTool
 
 TEST(AdvancedTroubleshootingToolTest, DoesNotFixMonitorDriver)
 {
-    ::testing::MockFunction<bool(windows::Severity)> windowsTrouleshootingMock{};
+    ::testing::MockFunction<bool(windows::Severity)> windowsTrouleshootingMock;
     EXPECT_CALL(windowsTrouleshootingMock, Call(windows::Severity::CRITICAL))
         .WillOnce(::testing::Throw(std::runtime_error{"Exception thrown from mock."}));
 
